@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="en">
+
+  <head>
+    <meta charset="utf-8">
+
+    <title>Unlock the Full Potential of HTTP Caching</title>
+
+    <meta name="description" content="How to take full advantage of HTTP caching to significantly improve the performance of both client and server">
+    <meta name="author" content="Thuva Tharma">
+
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+    <link rel="stylesheet" href="css/reveal.css">
+    <link rel="stylesheet" href="css/theme/night.css" id="theme">
+
+    <!-- For syntax highlighting -->
+    <link rel="stylesheet" href="lib/css/tomorrow-night-bright.css">
+
+    <!--[if lt IE 9]>
+    <script src="lib/js/html5shiv.js"></script>
+    <![endif]-->
+  </head>
+
+  <body>
+
+    <div class="reveal">
+
+      <!-- Any section element inside of this container is displayed as a slide -->
+      <div class="slides">
+
+        <section>
+          <h1>Unlock the Full Potential of HTTP Caching</h1>
+
+          <p>
+            <a href="http://www.thuvatharma.com" class="roll"><span data-title="Thuva Tharma">Thuva Tharma</span></a>
+            | Developer @ <a href="http://www.thescore.com" class="roll"><span data-title="theScore">theScore Inc.</span></a>
+            | <a href="https://twitter.com/ttharma" class="roll"><span data-title="@ttharma">@ttharma</span></a>
+          </p>
+        </section>
+
+        <section>
+          <h2>RFC 2616, Section 13</h2>
+          <blockquote>
+            The goal of caching in HTTP/1.1 is to <strong>eliminate the need to
+            send requests</strong> in many cases, and to <strong>eliminate the
+            need to send full responses</strong> in many other cases
+          </blockquote>
+        </section>
+
+        <section>
+          <h2>So How Do We Go About Achieving This Goal?</h2>
+          <h3 class="fragment roll-in">HTTP Request/Response Headers</h3>
+        </section>
+
+        <section>
+          <pre><code class="no-highlight">
+  > GET /thescore_logo.png
+  > If-Modified-Since: Tue, 10 Aug 2013 03:51:19 GMT
+  > If-None-Match: "5ee39d70f536014bdb599c1442d"
+
+  < 200 OK
+  < ...
+  < Cache-Control: max-age=300
+  < Expires: Tue, 10 Sep 2013 03:56:19 GMT
+  < Last-Modified: Tue, 10 Sep 2013 03:51:19 GMT
+  < Etag: "3bbe876fc7acb81cfe03b925fa142710"
+          </code></pre>
+        </section>
+
+        <section>
+          <h2>Expiration: Eliminating the Need to Send Requests</h2>
+          <h3>This reduces network round-trips</h3>
+          <pre><code class="no-highlight">
+  > GET /thescore_logo.png
+
+  < 200 OK
+  < Cache-Control: max-age=300
+  < Expires: Tue, 10 Sep 2013 03:56:19 GMT
+          </code></pre>
+        </section>
+
+        <section>
+          <h2>Validation: Eliminating the Need to Send Full Responses</h2>
+          <h3>This reduces network bandwidth</h3>
+        </section>
+
+        <section>
+          <h2><code>Last-Modified</code> Validator</h2>
+          <pre><code class="no-highlight">
+  > GET /thescore_logo.png
+
+  < 200 OK
+  < Last-Modified: Tue, 10 Sep 2013 03:51:19 GMT
+          </code></pre>
+
+          <pre class="fragment"><code class="no-highlight">
+  > GET /thescore_logo.png
+  > If-Modified-Since: Tue, 10 Sep 2013 03:51:19 GMT
+
+  < 304 Not Modified
+  < Last-Modified: Tue, 10 Sep 2013 03:51:19 GMT
+          </code></pre>
+        </section>
+
+        <section>
+          <h2><code>Etag</code> Validator</h2>
+          <pre><code class="no-highlight">
+  > GET /thescore_logo.png
+
+  < 200 OK
+  < Etag: "3bbe876fc7acb81cfe03b925fa142710"
+          </code></pre>
+
+          <pre class="fragment"><code class="no-highlight">
+  > GET /thescore_logo.png
+  > If-None-Match: "3bbe876fc7acb81cfe03b925fa142710"
+
+  < 304 Not Modified
+  < Etag: "3bbe876fc7acb81cfe03b925fa142710"
+          </code></pre>
+        </section>
+
+        <section>
+          <h2>Combining Expiration & Validation</h2>
+          <pre><code class="no-highlight">
+  > GET /thescore_logo.png
+
+  < 200 OK
+  < Cache-Control: max-age=300
+  < Etag: "3bbe876fc7acb81cfe03b925fa142710"
+          </code></pre>
+
+          <pre class="fragment"><code class="no-highlight">
+  > GET /thescore_logo.png
+  > If-None-Match: "3bbe876fc7acb81cfe03b925fa142710"
+
+  < 304 Not Modified
+  < Cache-Control: max-age=300
+  < Etag: "3bbe876fc7acb81cfe03b925fa142710"
+          </code></pre>
+        </section>
+
+        <section>
+          <h2>Non-Browser Clients</h2>
+
+          <h3>
+            If you're developing a mobile application, use a library
+            that takes care of the caching bits for the HTTP client
+            library that you're using:
+          </h3>
+
+          <ul>
+            <li>iOS: <code>NSURLCache</code> (drop-in caching for <code>NSURLConnection</code>)</li>
+            <li>Android: <code>HttpResponseCache</code> (drop-in caching for <code>HttpUrlConnection</code>)</li>
+          </ul>
+        </section>
+
+        <section>
+          <h2>Gateway Caches</h2>
+          <h3>Gateway caches or reverse proxy caches let you take advantage of HTTP caching on server-side</h3>
+
+          You can use Rack Cache, Varnish, Squid, Akamai, etc. as your gateway caches.
+        </section>
+
+        <section>
+          <h2>Let's see what happens when you put a gateway cache between the client and the server</h2>
+        </section>
+
+        <section>
+          <h3>Nate makes the first request</h3>
+          <img src="images/gateway_cache_diagram1.png" />
+        </section>
+
+        <section>
+          <h3>Roel makes a request after 30 seconds</h3>
+          <img src="images/gateway_cache_diagram2.png" />
+        </section>
+
+        <section>
+          <h3>Mark makes a request after 2 minutes</h3>
+          <img src="images/gateway_cache_diagram3.png" />
+        </section>
+
+        <section>
+          <h2>Geo-Distributed Gateway Caches</h2>
+          <h3>Reduce network latency for your clients by distributing the gateway caches geographically</h3>
+
+          Once you have proper HTTP caching implemented on your server, you can use
+          services like Akamai or Fastly for this.
+        </section>
+
+        <section>
+          <h2>Discussion: How to Come Up with Effective Expiration & Validation Values</h2>
+        </section>
+
+        <section>
+          <h1>Thank You!</h1>
+          <p><a href="http://thuva.github.com/http_caching" class="roll"><span data-title="Slides">thuva.github.com/http_caching</span></a></p>
+        </section>
+
+      </div>
+
+    </div>
+
+    <script src="lib/js/head.min.js"></script>
+    <script src="js/reveal.js"></script>
+
+    <script>
+      Reveal.initialize({
+        controls: true,
+        progress: true,
+        history: true,
+        center: true,
+
+        theme: Reveal.getQueryHash().theme,
+        transition: Reveal.getQueryHash().transition || 'default', // default/cube/page/concave/zoom/linear/none
+
+        // Optional libraries used to extend on reveal.js
+        dependencies: [
+          { src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } },
+        ]
+      });
+    </script>
+
+  </body>
+</html>
