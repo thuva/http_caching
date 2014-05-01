@@ -1,0 +1,27 @@
+FORMAT: 1A
+
+# theScore Connect API v1
+
+Welcome to the our sample API documentation. All comments can be written
+in (support [Markdown](http://daringfireball.net/projects/markdown/syntax) syntax)
+
+# Group Public API
+
+## Shopping Cart [/shopping_cart]
+
+### List products in shopping cart [GET]
++ Response 200 (application/json)
+    + Headers
+        
+            X-Api-Version: 1.2.3
+
+    + Body
+    
+            {
+              "items": [
+                {
+                  "name": "Ruby Book",
+                  "price": 20.00 
+                }
+              ]
+            }
