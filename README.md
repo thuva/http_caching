@@ -7,4 +7,4 @@ usually leverage its full potential.
 In this talk, I show you how to take full advantage of HTTP caching
 to significantly improve the performance of both client and server.
 
-View the slides [here](http://thuva.github.com/http_caching).
+View the slides [here](http://thuva.github.io/http_caching).
